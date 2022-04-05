@@ -4,7 +4,7 @@
 #include <isa-all-instr.h>
 #include <locale.h>
 
-/* The assembly code of instructions executed is only output to the screen
+/* The assembly code of  instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
@@ -20,6 +20,7 @@ rtlreg_t tmp_reg[4];
 
 void device_update();
 void fetch_decode(Decode *s, vaddr_t pc);
+int check_using_list();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -27,6 +28,15 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+
+#if 1//CONFIG_WATCHPOINT
+	int num, old, new;
+	if(check_using_list(&num, &old, &new) < 0){
+		nemu_state.state = NEMU_STOP;
+		printf("Watchpoint %d break, old value: 0x%08x, new value: 0x%08x\n", num, old, new);
+	}
+
+#endif  
 }
 
 #include <isa-exec.h>

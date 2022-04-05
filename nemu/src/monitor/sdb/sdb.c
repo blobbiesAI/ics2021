@@ -3,7 +3,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-
+#include "memory/vaddr.h"
 static int is_batch_mode = false;
 
 void init_regex();
@@ -39,15 +39,107 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
+static int cmd_si(char* args){
+	if(args==NULL){
+		cpu_exec(1);
+		return 0; 
+	}
+	uint64_t i_N = (uint64_t)atoll(args);
+    cpu_exec(i_N);
+    return 0;
+}
+
+
+static void print_register(){
+	isa_reg_display();
+	return;	
+}
+
+void soft_wp_display();
+static void print_watchpoint(){
+	soft_wp_display();
+	return;
+}
+
+static int cmd_info(char* args){
+	Assert(args, "Arguments missing");
+     switch(args[0]){
+		case 'r': print_register(); break;
+		case 'w': print_watchpoint(); break;
+		default:
+			printf("Uknow argument!");
+			break;
+	}
+	return 0;
+}
+
+
+static int cmd_x(char* args){
+	Assert(args, "Arguments missing");
+	char* count_memr = strtok(args, " ");
+	char* start_addr = count_memr + strlen(count_memr) + 1;
+
+	int N_four_bytes = atoi(count_memr);	
+	vaddr_t begin_addr = strtol(start_addr, NULL, 16);	
+	
+	word_t memr_v;
+	for(int idx = 0; idx<N_four_bytes;  idx++){
+		memr_v = vaddr_read(begin_addr+4*idx, 4);
+		printf("%08x: %08x %u\n", begin_addr+4*idx, memr_v, memr_v);
+	}
+	return 0;
+}
+
+word_t expr(char*, bool*);
+static int cmd_p(char* args){
+	Assert(args, "Arguments missing");
+	bool success = true;
+	word_t output = expr(args, &success);
+	if(success==true){ printf("HEX:0x%08x DEC:%u\n", output, output); return 0;}
+	else{ 
+		printf("Bad expression, incredible answer!\n");		
+	}
+	return 0;
+}
+
+
+int new_wp(char* args);
+static int cmd_watch(char* args){
+	Assert(args, "Arguments missing");
+	int wp_id;
+	wp_id = new_wp(args);
+	printf("Software watchpoint %d: %s\n", wp_id, args);
+	return 0;	
+}
+
+int free_wp(char* args);
+static int cmd_d(char* args){
+	int wp_id;
+	wp_id = free_wp(args);
+	if(wp_id<0){
+		printf("Delete all watchpoints.\n");
+	}
+	else{
+		printf("Software watchpoint %d at %s deleted.\n", wp_id, args);
+	}
+	return 0;	
+}
+
+
 static struct {
   const char *name;
   const char *description;
   int (*handler) (char *);
-} cmd_table [] = {
+} cmd_table [] = {//running raguments
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  {"si", "Let the program step through N instructions and then pause execution. When N is not given, the default is 1", cmd_si},
+  {"info", "Print register status (r) or Print Watchpoint Information (w)", cmd_info},
+  {"x", "Print N 4 bytes memory value from start addr", cmd_x},
+  {"p", "Expression evaluation", cmd_p},
+  {"watch", "Set up a new watchpoint", cmd_watch},
+  {"d", "Delete watchpoint N.", cmd_d},
   /* TODO: Add more commands */
 
 };
@@ -110,7 +202,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-        if (cmd_table[i].handler(args) < 0) { return; }
+        if (cmd_table[i].handler(args) < 0) { return; }//q return -1, mainloop reutrn
         break;
       }
     }

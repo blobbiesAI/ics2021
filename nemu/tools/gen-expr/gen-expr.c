@@ -15,9 +15,45 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
+static char* opts[] = {"+", "-", "*"};
+static char spaces[] = "    ";
+
+static void gen_space(){
+	snprintf(buf+strlen(buf), rand()%4, "%s", spaces);
+	return;
+}
+
+static void gen_dec_num(){	
+	gen_space();
+	sprintf(buf+strlen(buf), "%u", (uint32_t)(rand()%9+1)); 
+	gen_space();
+	return;
+}
+
+static void gen_opt(){
+	gen_space();
+	sprintf(buf+strlen(buf), "%s", opts[rand()%3]);
+	gen_space();
+	return;
+}
 
 static void gen_rand_expr() {
-  buf[0] = '\0';
+	 if(strlen(buf)>=65535){return;}
+	 switch(rand()%4){  
+		case 0:                 //increase the gen_num probiblity
+		case 1:	gen_dec_num();//di gui jiezhi tiaojian
+				break;
+		case 2: sprintf(buf+strlen(buf), "%s", "("); 
+				gen_rand_expr();
+				sprintf(buf+strlen(buf), "%s", ")");
+				break;
+		default:
+				gen_rand_expr();
+				gen_opt();
+				gen_rand_expr();
+				break;
+	}
+	return;
 }
 
 int main(int argc, char *argv[]) {
@@ -29,7 +65,12 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+	buf[0] = '\0';//init
     gen_rand_expr();
+	if( strlen(buf)>=65535 ){
+		printf("buffer overflow!");
+		continue;
+	}
 
     sprintf(code_buf, code_format, buf);
 

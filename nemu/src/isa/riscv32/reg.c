@@ -9,8 +9,19 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+	//printf("Rname V16 V10\n");
+	for(int idx = 0; idx<32; idx++){
+		printf("%s   %08x   %u\n", reg_name(idx,32), gpr(idx), gpr(idx));
+	}
+	return;
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+	for(int idx = 0; idx<32; idx++){
+		if(strcmp(reg_name(idx,32), s)==0){
+			return	gpr(idx);
+		}
+	} 
+	*success = false;
+	return 0;
 }
