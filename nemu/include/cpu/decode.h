@@ -14,7 +14,7 @@ typedef struct {
   IFDEF(CONFIG_ISA_x86, rtlreg_t val);
   IFDEF(CONFIG_ISA_x86, uint8_t type);
   IFDEF(CONFIG_ISA_x86, uint8_t reg);
-} Operand;
+} Operand;//DATA union class: register , immediate data
 
 typedef struct Decode {
   vaddr_t pc;
@@ -34,12 +34,14 @@ typedef struct Decode {
 // `INSTR_LIST` is defined at src/isa/$ISA/include/isa-all-instr.h
 #define def_EXEC_ID(name) concat(EXEC_ID_, name),
 #define def_all_EXEC_ID() enum { MAP(INSTR_LIST, def_EXEC_ID) TOTAL_INSTR }
-
+//enum { EXEC_ID_lui, EXEC_ID_lw, EXEC_ID_sw, EXEC_ID_inv, EXEC_ID_nemu_trap, TOTAL_INSTR }
 
 // --- prototype of table helpers ---
 #define def_THelper(name) static inline int concat(table_, name) (Decode *s)
 #define def_THelper_body(name) def_THelper(name) { return concat(EXEC_ID_, name); }
+
 #define def_all_THelper() MAP(INSTR_LIST, def_THelper_body)
+//table_lui {return EXEC_ID_lui}
 
 
 // --- prototype of decode helpers ---

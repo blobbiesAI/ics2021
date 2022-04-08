@@ -22,7 +22,7 @@
 
 // compute
 
-def_rtl_compute_reg_imm(add)
+def_rtl_compute_reg_imm(add)//rtl_add(register to register) and rtl_addi(register to immediate)
 def_rtl_compute_reg_imm(sub)
 def_rtl_compute_reg_imm(and)
 def_rtl_compute_reg_imm(or)

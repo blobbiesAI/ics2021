@@ -29,7 +29,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
-#if 1//CONFIG_WATCHPOINT
+#if 0//CONFIG_WATCHPOINT
 	int num, old, new;
 	if(check_using_list(&num, &old, &new) < 0){
 		nemu_state.state = NEMU_STOP;
@@ -44,6 +44,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #define FILL_EXEC_TABLE(name) [concat(EXEC_ID_, name)] = concat(exec_, name),
 static const void* g_exec_table[TOTAL_INSTR] = {
   MAP(INSTR_LIST, FILL_EXEC_TABLE)
+  //[0] = exec_lui, [1] = exec_lw,...
 };
 
 static void fetch_decode_exec_updatepc(Decode *s) {
@@ -62,16 +63,16 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
-  isa_reg_display();
+  //isa_reg_display();
   statistic();
 }
 
 void fetch_decode(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
-  int idx = isa_fetch_decode(s);
+  int idx = isa_fetch_decode(s);//update snpc
   s->dnpc = s->snpc;
-  s->EHelper = g_exec_table[idx];
+  s->EHelper = g_exec_table[idx];//exec_name(s);
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
