@@ -26,9 +26,27 @@ static inline def_rtl(neg, rtlreg_t *dest, const rtlreg_t* src1) {
   TODO();
 }
 
+static inline def_rtl(sexti, sword_t dest, const word_t src1, int width) {
+  // dest <- signext(src1[(width * 8 - 1) .. 0])
+	switch(width){
+		case 4: dest = (sword_t)(int32_t)src1; return;
+		case 2: dest = (sword_t)(int16_t)src1; return;
+		case 1: dest = (sword_t)( int8_t)src1; return;
+		IFDEF(CONFIG_ISA64, case 8: dest = (sword_t)(int64_t)src1; return);
+		IFDEF(CONFIG_RT_CHECK, default: assert(0));
+	}
+}
+
+
 static inline def_rtl(sext, rtlreg_t* dest, const rtlreg_t* src1, int width) {
   // dest <- signext(src1[(width * 8 - 1) .. 0])
-  TODO();
+	switch(width){
+		case 4: *dest = (sword_t)(int32_t)(*src1); return;
+		case 2: *dest = (sword_t)(int16_t)(*src1); return;
+		case 1: *dest = (sword_t)( int8_t)(*src1); return;
+		IFDEF(CONFIG_ISA64, case 8: *dest = (sword_t)(int64_t)(*src1); return);
+		IFDEF(CONFIG_RT_CHECK, default: assert(0));
+	}
 }
 
 static inline def_rtl(zext, rtlreg_t* dest, const rtlreg_t* src1, int width) {
