@@ -3,7 +3,7 @@
 
 #include <cpu/difftest.h>
 
-typedef void(*io_callback_t)(uint32_t, int, bool);
+typedef void(*io_callback_t)(uint32_t, int, bool);//functionl pointer, rename void(*)(uint32_t, int ,bool) as io_callback_t
 uint8_t* new_space(int size);
 
 typedef struct {

@@ -21,21 +21,21 @@ void vga_update_screen();
 void device_update() {
   static uint64_t last = 0;
   uint64_t now = get_time();
-  if (now - last < 1000000 / TIMER_HZ) {
+  if (now - last < 1000000 / TIMER_HZ) {// time distance > T
     return;
   }
   last = now;
 
-  IFDEF(CONFIG_HAS_VGA, vga_update_screen());
+  IFDEF(CONFIG_HAS_VGA, vga_update_screen());//falsh the screen
 
 #ifndef CONFIG_TARGET_AM
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      case SDL_QUIT:
+      case SDL_QUIT:                           //if click the X to exit the screen
         nemu_state.state = NEMU_QUIT;
         break;
-#ifdef CONFIG_HAS_KEYBOARD
+#ifdef CONFIG_HAS_KEYBOARD                       //check key status
       // If a key was pressed
       case SDL_KEYDOWN:
       case SDL_KEYUP: {
@@ -60,8 +60,9 @@ void sdl_clear_event_queue() {
 
 void init_device() {
   IFDEF(CONFIG_TARGET_AM, ioe_init());
-  init_map();
+  init_map();//1.
 
+  //2.
   IFDEF(CONFIG_HAS_SERIAL, init_serial());
   IFDEF(CONFIG_HAS_TIMER, init_timer());
   IFDEF(CONFIG_HAS_VGA, init_vga());
@@ -70,5 +71,6 @@ void init_device() {
   IFDEF(CONFIG_HAS_DISK, init_disk());
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
 
+  //3.
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
