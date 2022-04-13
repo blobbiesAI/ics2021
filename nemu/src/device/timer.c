@@ -22,7 +22,7 @@ static void timer_intr() {
 }
 #endif
 
-void init_timer() {
+void init_timer() {//hardware init, add mmio to mmio pool
   rtc_port_base = (uint32_t *)new_space(8);
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("rtc", CONFIG_RTC_PORT, rtc_port_base, 8, rtc_io_handler);

@@ -2,7 +2,7 @@
 
 #define NR_MAP 16
 
-static IOMap maps[NR_MAP] = {};
+static IOMap maps[NR_MAP] = {};//io pool
 static int nr_map = 0;
 
 static IOMap* fetch_mmio_map(paddr_t addr) {
