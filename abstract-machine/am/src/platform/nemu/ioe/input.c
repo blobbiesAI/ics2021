@@ -5,8 +5,8 @@
 
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
   uint32_t keyword = inw(KBD_ADDR);
-  uint32_t stat = keyword & KEYDOWN_MASK;
+  uint32_t stat = (keyword & KEYDOWN_MASK)>>15;
   
-  kbd->keydown = (stat==KEYDOWN_MASK);
-  kbd->keycode = keyword;//AM_KEY_NONE;
+  kbd->keydown = (stat==1);
+  kbd->keycode = keyword & (~KEYDOWN_MASK);
 }

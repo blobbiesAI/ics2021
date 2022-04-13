@@ -3,7 +3,9 @@
 
 #define KEYDOWN_MASK 0x8000
 
-#ifndef CONFIG_TARGET_AM
+
+//???????
+#ifndef CONFIG_TARGET_AM       
 #include <SDL2/SDL.h>
 
 // Note that this is not the standard
@@ -20,27 +22,27 @@ f(UP) f(DOWN) f(LEFT) f(RIGHT) f(INSERT) f(DELETE) f(HOME) f(END) f(PAGEUP) f(PA
 
 enum {
   _KEY_NONE = 0,
-  MAP(_KEYS, _KEY_NAME)
+  MAP(_KEYS, _KEY_NAME)//_KEY_F1, _KEY_F2...
 };
 
 #define SDL_KEYMAP(k) keymap[concat(SDL_SCANCODE_, k)] = concat(_KEY_, k);
 static uint32_t keymap[256] = {};
 
 static void init_keymap() {
-  MAP(_KEYS, SDL_KEYMAP)
+  MAP(_KEYS, SDL_KEYMAP)//keymap[SDL_SCANCODE_F1] = _KEY_F1
 }
 
 #define KEY_QUEUE_LEN 1024
-static int key_queue[KEY_QUEUE_LEN] = {};
+static int key_queue[KEY_QUEUE_LEN] = {};//queue
 static int key_f = 0, key_r = 0;
 
-static void key_enqueue(uint32_t am_scancode) {
+static void key_enqueue(uint32_t am_scancode) {//into queue
   key_queue[key_r] = am_scancode;
   key_r = (key_r + 1) % KEY_QUEUE_LEN;
   Assert(key_r != key_f, "key queue overflow!");
 }
 
-static uint32_t key_dequeue() {
+static uint32_t key_dequeue() {//out of queue
   uint32_t key = _KEY_NONE;
   if (key_f != key_r) {
     key = key_queue[key_f];
@@ -50,15 +52,15 @@ static uint32_t key_dequeue() {
 }
 
 void send_key(uint8_t scancode, bool is_keydown) {
-  if (nemu_state.state == NEMU_RUNNING && keymap[scancode] != _KEY_NONE) {
-    uint32_t am_scancode = keymap[scancode] | (is_keydown ? KEYDOWN_MASK : 0);
-    key_enqueue(am_scancode);
+  if (nemu_state.state == NEMU_RUNNING && keymap[scancode] != _KEY_NONE) {//map the sdl_scancode(host machine) to NEMU(guest machine) 
+    uint32_t am_scancode = keymap[scancode] | (is_keydown ? KEYDOWN_MASK : 0);//call it as am_scancode, if keydown,set hign bit of the am_scancode to 1
+    key_enqueue(am_scancode);//put the am_scancode into the key queue
   }
 }
 #else // !CONFIG_TARGET_AM
 #define _KEY_NONE 0
 
-static uint32_t key_dequeue() {
+static uint32_t key_dequeue() {//here we donot need a queue, we suppose that when we input a am_scancode into the keyboard register, it immediately get by guest software(game like mories)
   AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
   uint32_t am_scancode = ev.keycode | (ev.keydown ? KEYDOWN_MASK : 0);
   return am_scancode;
