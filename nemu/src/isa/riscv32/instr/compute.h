@@ -51,7 +51,9 @@ def_EHelper(mul){
 def_EHelper(mulh){
 	rtl_muls_hi(s, ddest, dsrc1, dsrc2);
 }
-
+def_EHelper(mulhu){
+	rtl_mulu_hi(s, ddest, dsrc1, dsrc2);
+}
 
 def_EHelper(div){
 	rtl_divs_q(s, ddest, dsrc1, dsrc2);
@@ -111,7 +113,9 @@ def_EHelper(xor){
 	rtl_xor(s, ddest, dsrc1, dsrc2);
 }
 
-
+def_EHelper(slti){//y
+	rtl_setrelopi(s, RELOP_LT, ddest, dsrc1, id_src2->imm);	
+}
 def_EHelper(sltiu){//y
 	rtl_setrelopi(s, RELOP_LTU, ddest, dsrc1, id_src2->imm);	
 }
@@ -156,7 +160,7 @@ def_EHelper(bgeu){
 	}
 }
 
-def_EHelper(slli){
+def_EHelper(slli){//////
 	rtl_slli(s, ddest, dsrc1, id_src2->imm);
 }
 

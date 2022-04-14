@@ -32,22 +32,22 @@ f(30) f(31)
 __am_asm_trap:
   addi sp, sp, -CONTEXT_SIZE
 
-  MAP(REGS, PUSH)
+  MAP(REGS, PUSH)                 /*将通用寄存器的值存到context结构体中*/
 
   csrr t0, mcause
   csrr t1, mstatus
-  csrr t2, mepc
+  csrr t2, mepc                 /*利用指令从cpu.mcause等寄存器中获得值*/
 
   STORE t0, OFFSET_CAUSE(sp)
   STORE t1, OFFSET_STATUS(sp)
-  STORE t2, OFFSET_EPC(sp)
+  STORE t2, OFFSET_EPC(sp)          /*CSRs 存到context结构体中*/
 
   # set mstatus.MPRV to pass difftest
   li a0, (1 << 17)
   or t1, t1, a0
   csrw mstatus, t1
 
-  mv a0, sp
+  mv a0, sp    
   jal __am_irq_handle
 
   LOAD t1, OFFSET_STATUS(sp)
@@ -58,4 +58,4 @@ __am_asm_trap:
   MAP(REGS, POP)
 
   addi sp, sp, CONTEXT_SIZE
-  mret
+  mret                                  /*返回自陷指令的下一条指令*/
