@@ -102,7 +102,7 @@ int _fstat(int fd, struct stat *buf) {
 }
 
 int _stat(const char *fname, struct stat *buf) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
@@ -117,22 +117,22 @@ pid_t _getpid() {
 }
 
 pid_t _fork() {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 pid_t vfork() {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 int _link(const char *d, const char *n) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 int _unlink(const char *n) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 

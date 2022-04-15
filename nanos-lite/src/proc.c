@@ -23,7 +23,8 @@ void init_proc() {
   switch_boot_pcb();
 
   Log("Initializing processes...");
-
+  void naive_uload(PCB *pcb, const char *filename);
+  naive_uload(NULL,NULL);
   // load program here
 
 }
