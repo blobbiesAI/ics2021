@@ -24,17 +24,30 @@ def_EHelper(auipc){
 	rtl_addi(s, ddest, &s->pc, id_src1->imm);
 }
 
+///////////////////////////////////////////////////
+def_EHelper(jal){
+	rtl_li(s, ddest, 4 + s->pc);
+	rtl_j(s, s->pc + id_src1->imm);
+}
+                                                                    //other people implement
+def_EHelper(jalr){
+	rtl_j(s, *dsrc1 + id_src2->imm);
+	rtl_li(s, ddest, 4 + s->pc);
+}
+////////////////////////////////////////////////////////
+/*
 def_EHelper(jal){
 	rtl_mv(s, ddest, &s->snpc);
 	rtl_addi(s, &s->dnpc, &s->pc, id_src1->imm);
 }
-
+                                                                     //my own implement
 def_EHelper(jalr){
 	rtl_mv(s, ddest, &s->snpc);
 	rtl_addi(s, &s->dnpc, dsrc1, id_src2->imm);
 	s->dnpc &= ~1;
 }
-
+*/
+//////////////////////////////////////////////////////////////
 def_EHelper(add){
 	rtl_add(s, ddest, dsrc1, dsrc2);
 }
@@ -161,14 +174,14 @@ def_EHelper(bgeu){
 }
 
 def_EHelper(slli){//////
-	rtl_slli(s, ddest, dsrc1, id_src2->imm);
+	rtl_slli(s, ddest, dsrc1, id_src2->imm & 0b111111u);
 }
 
 def_EHelper(srli){
-	rtl_srli(s, ddest, dsrc1, id_src2->imm);
+	rtl_srli(s, ddest, dsrc1, id_src2->imm & 0b111111u);/////
 }
 
 
 def_EHelper(srai){
-	rtl_srai(s, ddest, dsrc1, id_src2->imm);
+	rtl_srai(s, ddest, dsrc1, id_src2->imm & 0b111111u);//////
 }

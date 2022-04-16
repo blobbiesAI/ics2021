@@ -18,12 +18,12 @@
 #define _arg5(a0, a1, a2, a3, a4, a5, ...) a5
 
 // extract an argument from the macro array
-#define SYSCALL  _args(0, ARGS_ARRAY)
-#define GPR1 _args(1, ARGS_ARRAY)
-#define GPR2 _args(2, ARGS_ARRAY)
-#define GPR3 _args(3, ARGS_ARRAY)
-#define GPR4 _args(4, ARGS_ARRAY)
-#define GPRx _args(5, ARGS_ARRAY)
+#define SYSCALL  _args(0, ARGS_ARRAY)//ecall
+#define GPR1 _args(1, ARGS_ARRAY)//a7
+#define GPR2 _args(2, ARGS_ARRAY)//a0
+#define GPR3 _args(3, ARGS_ARRAY)//a1
+#define GPR4 _args(4, ARGS_ARRAY)//a2
+#define GPRx _args(5, ARGS_ARRAY)//a0
 
 // ISA-depedent definitions
 #if defined(__ISA_X86__)
@@ -41,12 +41,12 @@
 #endif
 
 intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
-  register intptr_t _gpr1 asm (GPR1) = type;
+  register intptr_t _gpr1 asm (GPR1) = type;//register修饰符暗示编译程序相应的变量将被频繁地使用，如果可能的话，应将其保存在CPU的寄存器中，以加快其存储速度
   register intptr_t _gpr2 asm (GPR2) = a0;
   register intptr_t _gpr3 asm (GPR3) = a1;
   register intptr_t _gpr4 asm (GPR4) = a2;
   register intptr_t ret asm (GPRx);
-  asm volatile (SYSCALL : "=r" (ret) : "r"(_gpr1), "r"(_gpr2), "r"(_gpr3), "r"(_gpr4));
+  asm volatile (SYSCALL : "=r" (ret) : "r"(_gpr1), "r"(_gpr2), "r"(_gpr3), "r"(_gpr4));//: "=r"代表以上指令的输出；最后复制到局部变量ret ：“r”代表输入
   return ret;
 }
 
@@ -61,12 +61,22 @@ int _open(const char *path, int flags, mode_t mode) {
 }
 
 int _write(int fd, void *buf, size_t count) {
-  _exit(SYS_write);
-  return 0;
+  return _syscall_(SYS_write, fd, (intptr_t)buf, count);
 }
 
+extern char _end;//man 3 end
+intptr_t old_datasegment = 0; 
 void *_sbrk(intptr_t increment) {
-  return (void *)-1;
+	if(old_datasegment==0){
+		old_datasegment = (intptr_t)&_end;
+	}
+	intptr_t new_datasegment = old_datasegment + increment; 
+    if(_syscall_(SYS_brk, new_datasegment, 0, 0)==0){
+		intptr_t newmem_p = old_datasegment;
+		old_datasegment = new_datasegment; 
+		return (void*)newmem_p;
+	}
+  //return (void *)-1;
 }
 
 int _read(int fd, void *buf, size_t count) {
@@ -137,22 +147,22 @@ int _unlink(const char *n) {
 }
 
 pid_t _wait(int *status) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 clock_t _times(void *buf) {
-  assert(0);
+  //assert(0);
   return 0;
 }
 
 int pipe(int pipefd[2]) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 int dup(int oldfd) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
@@ -161,17 +171,17 @@ int dup2(int oldfd, int newfd) {
 }
 
 unsigned int sleep(unsigned int seconds) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 
 int symlink(const char *target, const char *linkpath) {
-  assert(0);
+  //assert(0);
   return -1;
 }
 

@@ -65,12 +65,20 @@ int strncmp(const char *s1, const char *s2, size_t n) {//????
 }
 
 void *memset(void *s, int c, size_t n) {
-	size_t i;
-	int8_t* p = (int8_t*)s;
-	for(i = 0; i<n; i++){
-		p[i] = c;
-	}
-	return (void*)s;
+	//size_t i;
+	//int8_t* p = (int8_t*)s;
+	//for(i = 0; i<n; i++){
+	//	p[i] = c;
+	//}
+	//return (void*)s;
+	if(s==NULL||n<=0)
+		return 0;
+	const unsigned char u=c;
+	unsigned char *us;
+	for(us=s;n>0;us++,n--)
+		*us=u;
+	return s;
+
 }
 
 void *memmove(void *dst, const void *src, size_t n) {
