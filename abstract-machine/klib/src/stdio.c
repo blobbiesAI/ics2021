@@ -294,7 +294,7 @@ int sprintf(char *out, const char *fmt, ...) {
 	va_list args;
 	int i;
 	va_start(args, fmt);
-	i=vsprintf(out, fmt, args);
+	i=vsprintf(out, fmt, args);//打印到缓冲区
 	va_end(args);
 	return i;
 }
@@ -304,13 +304,20 @@ int printf(const char *fmt, ...){
 	int i;
 	char buf[2048]={'\0'};
 	va_start(args,fmt);
-	i=vsprintf(buf, fmt, args);
+	i=vsprintf(buf, fmt, args);//打印到缓冲区
 	va_end(args);
-	putstr(buf);
+	putstr(buf);//将缓冲区内字符串putch()出来
 	return i;
 }
 int snprintf(char *out, size_t n, const char *fmt, ...) {
-	panic("Not implemented");
+	va_list args;
+	int i;
+	va_start(args, fmt);
+	i = vsprintf(out, fmt, args);
+	va_end(args);
+
+	out[n-1] = '\0';
+	return i>n ? n : i;
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
