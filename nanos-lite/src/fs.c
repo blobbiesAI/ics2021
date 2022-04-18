@@ -13,7 +13,7 @@ typedef struct {
   size_t open_offset;
 } Finfo;
 
-enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_EVENT, FD_DISPINFO, FD_FB};
+enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB, FD_EVENT, FD_DISPINFO};
 
 size_t invalid_read(void *buf, size_t offset, size_t len) {
   panic("should not reach here");
@@ -30,14 +30,20 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
   [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
   [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
+  [FD_FB] = {"/dev/fb", 0, 0, invalid_read, fb_write},
   [FD_EVENT]  = {"/dev/events", 0, 0, events_read, invalid_write},//dev is a file
   [FD_DISPINFO] = {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
-#include "files.h"
+  #include "files.h"
 };
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
-
+	int screen_w = io_read(AM_GPU_CONFIG).width;
+	int screen_h = io_read(AM_GPU_CONFIG).height;
+	//sscanf(buf, "%[A-Z:]%d %[A-Z:]%d", NULL, &screen_w, NULL, &screen_h);//关照重要点
+	file_table[FD_FB].size = screen_w * screen_h * sizeof(uint32_t);
+	file_table[FD_FB].open_offset = 0;
+	return;
 }
 
 
@@ -78,7 +84,10 @@ size_t fs_write(int fd, const void *buf, size_t len){
 		file_table[fd].open_offset += len;
 	}
 	else{
-		file_table[fd].write(buf, 0, len);
+		//if(fd==FD_FB){
+			file_table[fd].write(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
+		//}
+		//else{file_table[fd].write(buf, 0, len);}
 	}
 	return len;
 }

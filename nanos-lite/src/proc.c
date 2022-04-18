@@ -24,8 +24,8 @@ void init_proc() {
   switch_boot_pcb();
 
   Log("Initializing processes...");
-  naive_uload(NULL,"/bin/bmp-test");//jump to entry....
-  // load program here
+  naive_uload(NULL,"/bin/nslider");//jump to entry....
+  // load program here  nslider
 
 }
 
