@@ -5,11 +5,41 @@
 #include <stdlib.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-  assert(dst && src);
-  assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+	assert(dst && src);
+	assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+
+	int sx = (srcrect == NULL ? 0 : srcrect->x);
+	int sy = (srcrect == NULL ? 0 : srcrect->y);
+	int dx = (dstrect == NULL ? 0 : dstrect->x);
+	int dy = (dstrect == NULL ? 0 : dstrect->y);
+	int w = (srcrect == NULL ? src->w : srcrect->w);
+	int h = (srcrect == NULL ? src->h : srcrect->h);
+	//printf("%d %d %d %d %d %d\n", sx, sy, dx, dy, w, h);	
+	uint32_t *q = (uint32_t*)dst->pixels;
+	uint32_t *p = (uint32_t*)src->pixels;
+
+	for(size_t i = 0; i < h; i++){
+		for(size_t j = 0; j < w; j++){
+			q[(dy+i)*dst->w + dx+j] = p[(sy+i)*src->w + sx+j];
+		}
+	}
+	return;
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+	int x = (dstrect == NULL ? 0 : dstrect->x);
+	int y = (dstrect == NULL ? 0 : dstrect->y);
+	int w = (dstrect == NULL ? dst->w : dstrect->w);
+	int h = (dstrect == NULL ? dst->h : dstrect->h);	
+
+	uint32_t *p = (uint32_t*)dst->pixels;
+	for(size_t i = 0; i < h; i++){
+		for(size_t j = 0; j < w; j++){
+			p[(y+i)*dst->w + x+j] = color;
+		}
+	}
+	return;
+
 }
 
 
@@ -53,9 +83,8 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
 	}
 	*/
 
-	
 	if(s->format->BytesPerPixel==4){
-		NDL_DrawRect((uint32_t*)s->pixels, x, y, w, h);
+		NDL_DrawRect((uint32_t*)(s->pixels), x, y, w, h);
 	}
 	else{
 		if(w == 0||w > s->w) w = s->w;
@@ -148,7 +177,7 @@ void SDL_FreeSurface(SDL_Surface *s) {
 }
 
 SDL_Surface* SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags) {
-  if (flags & SDL_HWSURFACE) NDL_OpenCanvas(&width, &height);
+  if (flags & SDL_HWSURFACE) NDL_OpenCanvas(&width, &height);//????
   return SDL_CreateRGBSurface(flags, width, height, bpp,
       DEFAULT_RMASK, DEFAULT_GMASK, DEFAULT_BMASK, DEFAULT_AMASK);
 }

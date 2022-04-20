@@ -4,6 +4,7 @@
 
 #define SDL_STBIMAGE_IMPLEMENTATION
 #include "SDL_stbimage.h"
+#include <sys/stat.h>
 
 SDL_Surface* IMG_Load_RW(SDL_RWops *src, int freesrc) {
   assert(src->type == RW_TYPE_MEM);
@@ -12,7 +13,20 @@ SDL_Surface* IMG_Load_RW(SDL_RWops *src, int freesrc) {
 }
 
 SDL_Surface* IMG_Load(const char *filename) {
-  return NULL;
+	FILE *fp = fopen(filename, "r");
+	fseek(fp, 0, SEEK_END);
+	size_t size = ftell(fp);
+
+
+	uint8_t *buf = SDL_malloc(size);
+	fseek(fp, 0, SEEK_SET);
+	fread(buf, size, 1, fp);//libc与glibc的size和1位置相反?????
+	
+	SDL_Surface *SDL_Img = STBIMG_LoadFromMemory(buf, size);
+
+	fclose(fp);
+	SDL_free(buf);
+	return SDL_Img;
 }
 
 int IMG_isPNG(SDL_RWops *src) {

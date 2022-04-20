@@ -20,16 +20,18 @@ static uint32_t *canvas = NULL;
 uint32_t NDL_GetTicks() {
 	struct timeval timer;
 	gettimeofday(&timer, NULL);//用户程序中所使用的函数都是真实计算机内建的函数。
-	return timer.tv_sec;       //man 2 gettimeofday
+	return timer.tv_sec*1000+timer.tv_usec/1000;       //man 2 gettimeofday
 }
 
 
 int NDL_PollEvent(char *buf, int len) {
-	
 	 int fd = open("/dev/events", O_RDONLY);
-	 if(fd==-1){return 0;}
-	 read(fd, buf, len);
-	 return 1;
+	 if(fd==-1){
+		 assert(0);
+	 }
+	 int ret = read(fd, buf, len);
+	 close(fd);
+	 return ret;
 	 
 	/* 
 	FILE* fp = fopen("/dev/events","r");
@@ -57,8 +59,8 @@ void NDL_OpenCanvas(int *w, int *h) {
 	assert(*w>=0 && *h>=0);
 	canvas_w = *w < screen_w ? *w : screen_w;
 	canvas_h = *h < screen_h ? *h : screen_h;
-	if(*w==0) canvas_w = screen_w;
-	if(*h==0) canvas_h = screen_h;
+	if(*w==0) {canvas_w = screen_w; *w = screen_w;}//NDL_OpenCanvas的功能之一就是当w=0/h=0时，将屏幕宽度和高度赋给它，这很重要，否则后面会在DL_Surface* SDL_SetVideoMode函数中出现bug，出现屏幕宽高出现负数
+	if(*h==0) {canvas_h = screen_h; *h = screen_h;}
 
 	//打开画布
 	canvas = (uint32_t*)malloc(canvas_w * canvas_h * sizeof(uint32_t));
@@ -103,7 +105,7 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
 
 	for(int i = 0; i<canvas_h; i++){//从画布复制到/dev/fb,这里可以将画布放到任意位置,此时是左上角
 		fseek(fp, (offset_w + screen_w * (offset_h + i))*sizeof(uint32_t), SEEK_SET);
-		fwrite((canvas+canvas_w*i), sizeof(uint32_t),  canvas_w, fp);
+		fwrite((void*)(canvas+canvas_w*i), sizeof(uint32_t),  canvas_w, fp);
 	}
 	return;
 	
