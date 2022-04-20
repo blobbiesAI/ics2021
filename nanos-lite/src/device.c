@@ -24,14 +24,19 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 	return i;
 }
 
-size_t events_read(void *buf, size_t offset, size_t len) {
+size_t events_read(void *buf, size_t offset, size_t len) {//函数实现有bug
 	AM_INPUT_KEYBRD_T keyboard = io_read(AM_INPUT_KEYBRD);
 	if(keyboard.keycode == AM_KEY_NONE){return 0;}
-
-	if(keyboard.keydown){
-		return snprintf((char*)buf, len, "kd %s", keyname[keyboard.keycode]);
+	else{
+		memset((char*)buf, 0, len);
+		if(keyboard.keydown){
+			sprintf((char*)buf, "kd %s", keyname[keyboard.keycode]);
+		}
+		else{
+			sprintf((char*)buf, "ku %s", keyname[keyboard.keycode]);
+		}
+		return strlen((char*)buf);
 	}
-	return snprintf((char*)buf, len, "ku %s", keyname[keyboard.keycode]);
 }
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len) {
@@ -47,7 +52,6 @@ size_t fb_write(const void *buf, size_t offset, size_t len) {
 	
 	offset /= sizeof(uint32_t);
 	int y = offset/fb_w, x = offset % fb_w;
-
 	io_write(AM_GPU_FBDRAW, x, y, (void*)buf, len/sizeof(uint32_t), 1, true);
 	//int x, y; void *pixels; int w, h; bool sync
 	return len;

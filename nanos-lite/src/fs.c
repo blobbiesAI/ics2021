@@ -84,10 +84,12 @@ size_t fs_write(int fd, const void *buf, size_t len){
 		file_table[fd].open_offset += len;
 	}
 	else{
-		//if(fd==FD_FB){
+		if(fd==FD_FB){
 			file_table[fd].write(buf, file_table[fd].disk_offset + file_table[fd].open_offset, len);
-		//}
-		//else{file_table[fd].write(buf, 0, len);}
+			file_table[fd].open_offset += len;//一行会分为两行写到屏幕上，400像素点会分为256和144，分别在同一行从头写
+			                                  //没有这一行则有bug,不知什么原因，很奇怪，害老子查了一天
+		}
+		else{file_table[fd].write(buf, 0, len);}
 	}
 	return len;
 }
