@@ -50,12 +50,15 @@ __am_asm_trap:
   mv a0, sp    
   jal __am_irq_handle
 
+  mv sp, a0  #####???????????? 猜测在__am_irq_handle函数中a0值已经改变成新的进程的上下文指针,即schedule函数,这里的sp即是上下文指针
+
   LOAD t1, OFFSET_STATUS(sp)
   LOAD t2, OFFSET_EPC(sp)
   csrw mstatus, t1
   csrw mepc, t2
 
   MAP(REGS, POP)
+##恢复上下文信息指将栈中保存的寄存器的值恢复到硬件寄存器中，硬件只有一套，上下文可保存多套（即进程有多个）
 
   addi sp, sp, CONTEXT_SIZE
   mret                                  /*返回自陷指令的下一条指令*/

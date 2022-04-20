@@ -43,8 +43,8 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 }
 
 void naive_uload(PCB *pcb, const char *filename) {
-  uintptr_t entry = loader(pcb, filename);
+  uintptr_t entry = loader(pcb, filename);//返回程序入口地址
   Log("Jump to entry = %p", entry);
-  ((void(*)())entry) ();
+  ((void(*)())entry) ();//强制转化为函数指针, 通过函数调用转移到用户进程的代码
 }
 
