@@ -12,6 +12,7 @@ static Context* do_event(Event e, Context* c) {
 						//printf("%08x\n", c->GPR1);
 						break;
 	case EVENT_SYSCALL: 
+						//Log("syscall ok!");
 						do_syscall(c);	
 						break;
 	default: panic("Unhandled event ID = %d", e.event);

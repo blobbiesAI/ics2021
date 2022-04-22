@@ -35,6 +35,7 @@ void sys_write(Context*);
 void sys_close(Context*);
 void sys_lseek(Context*);
 void sys_brk(Context*);
+void sys_execve(Context*);
 void sys_gettimeofday(Context*);
 
 void do_syscall(Context *c) {
@@ -50,9 +51,10 @@ void do_syscall(Context *c) {
 	case SYS_close  : sys_close(c); break;
 	case SYS_lseek  : sys_lseek(c); break;
 	case SYS_brk    : sys_brk(c);   break;
+	case SYS_execve : sys_execve(c);break;
 	case SYS_gettimeofday: sys_gettimeofday(c); break;
     default: panic("Unhandled syscall ID = %d", a[0]);
-  }
+  } 
 }
 
 void sys_yield(Context *c){
@@ -132,6 +134,19 @@ void sys_brk(Context *c){
 	c->GPRx = 0;
 	return;
 }
+
+
+int pexecve(const char* filename, char *const argv[], char *const envp[]);
+void sys_execve(Context *c){
+	char* filename = (char*)c->GPR2;
+	char ** argv = (char**)c->GPR3;
+	char ** envp = (char**)c->GPR4;
+
+	c->GPRx = pexecve(filename, argv, envp);	
+
+	return;
+}
+
 
 
 void sys_gettimeofday(Context *c){

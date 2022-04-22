@@ -3,7 +3,9 @@
 static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
-  return NULL;
+	//pf初始是heap.start(看init_mm函数)，而之前讲义里都是从heap.end考虑，容易出错
+	pf += nr_page * 4096;
+    return pf;
 }
 
 #ifdef HAS_VME
