@@ -1,5 +1,7 @@
 #include <proc.h>
 #include <fs.h>
+#include <errno.h>
+
 #define MAX_NR_PROC 4
 void naive_uload(PCB *pcb, const char *filename);
 uintptr_t proc_uload(PCB *pcb, const char *filename);
@@ -9,7 +11,7 @@ static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
 
-static int free_pcb = 0;
+//static int free_pcb = 0;
 
 
 void switch_boot_pcb() {
@@ -19,8 +21,10 @@ void switch_boot_pcb() {
 void hello_fun(void *arg) {
   int j = 1;
   while (1) {
-    Log("Hello World from Nanos-lite with arg '%p' for the %dth time!", (uintptr_t)arg, j);
-    j ++;
+	if(j%10000==0){
+		Log("Hello World from Nanos-lite with arg '%p' for the %dth time!", (uintptr_t)arg, j);
+    }
+	j ++;
     yield();
   }
 }
@@ -34,7 +38,7 @@ void context_kload(PCB *pcb, void (*entry)(void *), void *arg){//每一个进程
 	return; 
 }
 
-void context_uload(PCB *pcb, const char* filename, char *const argv[], char *const envp[]){
+void context_uload(PCB *pcb, const char* filename, char *const argv[], char *const envp[]){//构造一个进程的初始的环境，包括PCB和用户栈，PCB中内核栈中保存初始上下文信息，但运行过程中的上下文信息是保存在用户栈中的
 	Area kstack = {.start = pcb->stack, .end = pcb->stack + STACK_SIZE};//每一个pcb里有一个内核栈（即一个数组),栈底放着Context，栈顶放着cp指针.
 	uintptr_t entry = proc_uload(pcb, filename);//进程入口地址
 	pcb->cp = ucontext(NULL, kstack, (void*)entry);//上下文结构指针
@@ -45,7 +49,7 @@ void context_uload(PCB *pcb, const char* filename, char *const argv[], char *con
 	size_t nr_page = 8;
 	char*p = (char*)new_page(nr_page);//8*4kb,  mm.c
 	pcb->cp->GPRx = (uintptr_t)p;
-	printf("%08x\n", p);
+	printf("new page:%08x\n", p);
 
 	/*argv和envp参数数组的成员数*/	
 	size_t argc = 0, envc = 0;
@@ -147,29 +151,29 @@ void context_uload(PCB *pcb, const char* filename, char *const argv[], char *con
 }
 
 
-enum{KERNEL_THREAD, PROC_NTERM, PROC_HELLO, PROC_EXEC_TEST};
+enum{KERNEL_THREAD, PROC_NTERM, PROC_MENU, PROC_BUSYBOX};
 
 char *uproc[] = {
 	[KERNEL_THREAD] = NULL,
 	[PROC_NTERM] = "/bin/nterm",
-	[PROC_HELLO] = "/bin/hello",
-	[PROC_EXEC_TEST] = "/bin/exec-test",
+	[PROC_MENU] = "/bin/menu",
+	[PROC_BUSYBOX] = "/bin/busybox",
 	//user process
 };
 
 
 char* argv[MAX_NR_PROC][8] = {
 	[PROC_NTERM] = {"/bin/nterm", NULL},
-	[PROC_HELLO] = {"/bin/hello", "hello word", "wangxiaobo", NULL},
-	[PROC_EXEC_TEST] = {"/bin/exec-test", NULL},
+	[PROC_MENU] = {"/bin/menu", NULL},
+	[PROC_BUSYBOX] = {"/bin/busybox", NULL},
 	//user process argv[]
 };
 
 
 char* envp[MAX_NR_PROC][8] = {
 	[PROC_NTERM] = {NULL},
-	[PROC_HELLO] = {NULL},
-	[PROC_EXEC_TEST] = {NULL},
+	[PROC_MENU] = {NULL},
+	[PROC_BUSYBOX] = {NULL},
 	//user process envp[]
 };
 
@@ -177,12 +181,13 @@ char* envp[MAX_NR_PROC][8] = {
 
 
 void init_proc() {
+	int id = PROC_MENU;
 	context_kload(&pcb[KERNEL_THREAD], hello_fun, "one");//刚刚加载完的,还未开始运行进程,在进程的栈上人工创建一个上下文结构,
 	//context_kload(&pcb[1], hello_fun, "two");//内核线程：操作系统内部函数？？？？
 
 	//context_uload(&pcb[PROC_NTERM], uproc[PROC_NTERM], argv[PROC_NTERM], envp[PROC_NTERM]);
-	context_uload(&pcb[PROC_HELLO], uproc[PROC_HELLO], argv[PROC_HELLO], envp[PROC_HELLO]);
-	//context_uload(&pcb[PROC_EXEC_TEST], uproc[PROC_EXEC_TEST], argv[PROC_EXEC_TEST], envp[PROC_EXEC_TEST]);
+	context_uload(&pcb[id], uproc[id], argv[id], envp[id]);
+	//context_uload(&pcb[PROC_EXEC_TEST], uproc[PROC_EXEC_TEST], argv[PROC_EXEC_TEST], envp[PROC_EXEC_TEST]);//
 
 	//--------------program break-----------------//
 	extern char _end;
@@ -199,12 +204,12 @@ void init_proc() {
 	//naive_uload(NULL,"/bin/exec-test");//jump to entry....// load program here  bird nslider nterm menu
 }
 
-Context* schedule(Context *prev) {
+Context* schedule(Context *prev) {//进程调度
 	// save the context pointer
 	current->cp = prev;	
 	// always select pcb[0] as the new process
 	//current = &pcb[0];
-	//current = &pcb[free_pcb];
+	//current = &pcb[2];
 	//free_pcb++;
 	current = (current == &pcb[0] ? &pcb[2] : &pcb[0]);
 	// then return the new context
@@ -218,7 +223,9 @@ int pexecve(const char* filename, char *const argv[], char *const envp[]){
 	printf("Loading from %s ...\n", filename);
 
 	//A的执行流中创建用户进程B
-	context_uload(&pcb[free_pcb], filename, argv, envp);
+	context_uload(&pcb[2], filename, argv, envp);
+	//要运行exec-test,只需要current = &pcb[3];和context_uload(&pcb[3], filename, argv, envp);
+	//通过new_page不断构建32KB大小用户栈,那内核栈
 
 	//结束A的执行流并切换到B进程
 	switch_boot_pcb();

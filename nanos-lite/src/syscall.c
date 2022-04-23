@@ -142,7 +142,12 @@ void sys_execve(Context *c){
 	char ** argv = (char**)c->GPR3;
 	char ** envp = (char**)c->GPR4;
 
-	c->GPRx = pexecve(filename, argv, envp);	
+	if(pexecve(filename, argv, envp)<0){
+		c->GPRx = -1;
+	}
+	else{
+		c->GPRx = 0;
+	}	
 
 	return;
 }
