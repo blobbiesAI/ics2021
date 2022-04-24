@@ -1,5 +1,8 @@
 def_EHelper(csrrw){
  	switch(id_src2->imm){
+		case 0x180: if(ddest != &gpr(0)){*ddest = cpu.satp;}
+					cpu.satp = *dsrc1;
+					break;
 		case 0x300: if(ddest != &gpr(0)){*ddest = cpu.mstatus;}
 					cpu.mstatus = *dsrc1;
 					break;
@@ -20,6 +23,9 @@ def_EHelper(csrrw){
 
 def_EHelper(csrrs){
 	 switch(id_src2->imm){
+		case 0x180: *ddest = cpu.satp;
+					if(dsrc1 != &gpr(0)){cpu.satp |= *dsrc1;}
+					break;
 		case 0x300: *ddest = cpu.mstatus;
 					if(dsrc1 != &gpr(0)){cpu.mstatus |= *dsrc1;}
 					break;

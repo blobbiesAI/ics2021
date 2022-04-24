@@ -12,6 +12,7 @@ typedef struct {
   rtlreg_t mcause;
   rtlreg_t mtvec;
   rtlreg_t mstatus;
+  rtlreg_t satp;
   vaddr_t pc;
 } riscv32_CPU_state;
 
@@ -75,5 +76,9 @@ typedef struct {
 } riscv32_ISADecodeInfo;
 
 #define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+
+//inline int isa_mmu_check(vaddr_t vaddr, int len, int type){
+//	return (cpu.satp >> 31)==1 ? MMU_TRANSLATE : MMU_DIRECT;
+//}
 
 #endif

@@ -9,8 +9,11 @@ void* new_page(size_t nr_page) {
 }
 
 #ifdef HAS_VME
-static void* pg_alloc(int n) {
-  return NULL;
+static void* pg_alloc(int n) {//参数是分配空间的字节数, 申请的空间总是页面大小的整数倍
+	void* ret = new_page(n/4096);
+	ret -= n;
+	memset(ret, 0, n);
+	return ret;
 }
 #endif
 
@@ -28,6 +31,7 @@ void init_mm() {
   Log("free physical pages starting from %p", pf);
 
 #ifdef HAS_VME
+  Log("init virtual memory extension");
   vme_init(pg_alloc, free_page);
 #endif
 }

@@ -157,7 +157,7 @@ char *uproc[] = {
 	[KERNEL_THREAD] = NULL,
 	[PROC_NTERM] = "/bin/nterm",
 	[PROC_MENU] = "/bin/menu",
-	[PROC_BUSYBOX] = "/bin/busybox",
+	[PROC_BUSYBOX] = "/bin/printenv",
 	//user process
 };
 
@@ -165,7 +165,7 @@ char *uproc[] = {
 char* argv[MAX_NR_PROC][8] = {
 	[PROC_NTERM] = {"/bin/nterm", NULL},
 	[PROC_MENU] = {"/bin/menu", NULL},
-	[PROC_BUSYBOX] = {"/bin/busybox", NULL},
+	[PROC_BUSYBOX] = {"/bin/printenv", NULL},
 	//user process argv[]
 };
 
@@ -181,12 +181,12 @@ char* envp[MAX_NR_PROC][8] = {
 
 
 void init_proc() {
-	int id = PROC_MENU;
+	//int id = PROC_BUSYBOX;
 	context_kload(&pcb[KERNEL_THREAD], hello_fun, "one");//刚刚加载完的,还未开始运行进程,在进程的栈上人工创建一个上下文结构,
 	//context_kload(&pcb[1], hello_fun, "two");//内核线程：操作系统内部函数？？？？
 
-	//context_uload(&pcb[PROC_NTERM], uproc[PROC_NTERM], argv[PROC_NTERM], envp[PROC_NTERM]);
-	context_uload(&pcb[id], uproc[id], argv[id], envp[id]);
+	context_uload(&pcb[PROC_NTERM], uproc[PROC_NTERM], argv[PROC_NTERM], envp[PROC_NTERM]);
+	//context_uload(&pcb[id], uproc[id], argv[id], envp[id]);
 	//context_uload(&pcb[PROC_EXEC_TEST], uproc[PROC_EXEC_TEST], argv[PROC_EXEC_TEST], envp[PROC_EXEC_TEST]);//
 
 	//--------------program break-----------------//
@@ -211,7 +211,7 @@ Context* schedule(Context *prev) {//进程调度
 	//current = &pcb[0];
 	//current = &pcb[2];
 	//free_pcb++;
-	current = (current == &pcb[0] ? &pcb[2] : &pcb[0]);
+	current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
 	// then return the new context
 	return current->cp;
 }
@@ -223,7 +223,7 @@ int pexecve(const char* filename, char *const argv[], char *const envp[]){
 	printf("Loading from %s ...\n", filename);
 
 	//A的执行流中创建用户进程B
-	context_uload(&pcb[2], filename, argv, envp);
+	context_uload(&pcb[1], filename, argv, envp);
 	//要运行exec-test,只需要current = &pcb[3];和context_uload(&pcb[3], filename, argv, envp);
 	//通过new_page不断构建32KB大小用户栈,那内核栈
 
