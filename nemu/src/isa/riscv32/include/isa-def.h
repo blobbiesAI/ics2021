@@ -2,7 +2,7 @@
 #define __ISA_RISCV32_H__
 
 #include <common.h>
-
+#include <isa.h>
 typedef struct {
   struct {
     rtlreg_t _32;
@@ -75,7 +75,7 @@ typedef struct {
   } instr;
 } riscv32_ISADecodeInfo;
 
-#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+//#define isa_mmu_check(vaddr, len, type) (MMU_TRANSLATE)
 
 //inline int isa_mmu_check(vaddr_t vaddr, int len, int type){
 //	return (cpu.satp >> 31)==1 ? MMU_TRANSLATE : MMU_DIRECT;

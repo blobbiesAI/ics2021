@@ -19,11 +19,13 @@ static Area segments[] = {      // Kernel memory mappings
 static inline void set_satp(void *pdir) {
   uintptr_t mode = 1ul << (__riscv_xlen - 1);
   asm volatile("csrw satp, %0" : : "r"(mode | ((uintptr_t)pdir >> 12)));
+  //将mode | ((uintptr_t)pdir >> 12)放到某一个通用寄存器中（r）,再放到汇编语句中执行
 }
 
 static inline uintptr_t get_satp() {
   uintptr_t satp;
   asm volatile("csrr %0, satp" : "=r"(satp));
+  //先执行汇编语句，再将某一个寄存器（r）中的值赋给（satp）,再输出satp
   return satp << 12;
 }
 
@@ -43,7 +45,6 @@ bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {
 
   set_satp(kas.ptr);//Sv32是二级页表，类似一个链表，给出第一级页表的地址就可以唯一确定
   vme_enable = 1;
-
   return true;
 }
 
@@ -80,14 +81,14 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {//添加一条页表条�
 		
 		//二级页表物理地址	
 		PTE secd_base_entry = (PTE)(pgalloc_usr(PGSIZE));
-		printf("0x%08x\n", secd_base_entry);	
+		//printf("0x%08x\n", secd_base_entry);	
 		//二级页表物理地址放在一级页表某一条目
 		*base_entry = (secd_base_entry >> 12) << 10;
 	}
 	
 	//二级页表某一条目
 	PTE* secd_entry = (PTE*)(((*base_entry) >> 10) << 12) + va21_12; 
-	
+
 	//物理地址填到二级页表某一条目
 	*secd_entry = ((PTE)pa >> 12) << 10  ;
 	return;

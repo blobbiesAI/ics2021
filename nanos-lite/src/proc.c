@@ -39,17 +39,27 @@ void context_kload(PCB *pcb, void (*entry)(void *), void *arg){//每一个进程
 }
 
 void context_uload(PCB *pcb, const char* filename, char *const argv[], char *const envp[]){//构造一个进程的初始的环境，包括PCB和用户栈，PCB中内核栈中保存初始上下文信息，但运行过程中的上下文信息是保存在用户栈中的
+	
+	//
+	protect(&pcb->as);
+
+
 	Area kstack = {.start = pcb->stack, .end = pcb->stack + STACK_SIZE};//每一个pcb里有一个内核栈（即一个数组),栈底放着Context，栈顶放着cp指针.
-	uintptr_t entry = proc_uload(pcb, filename);//进程入口地址
+	uintptr_t entry = proc_uload(pcb, filename);//加载用户程序,返回进程入口地址
 	pcb->cp = ucontext(NULL, kstack, (void*)entry);//上下文结构指针
 	printf("user process entry:%p, uprocess context:%p, heap_start:%p, heap end:%p\n", entry, pcb->cp, heap.start, heap.end);
 
 
-	/********从heap.end开始，每个进程往下获得32KB大小用户栈空间，新进程继续往下获得32KB......**********/
+	/********从heap.start开始，每个进程往上获得32KB大小用户栈空间，新进程继续往上获得32KB......**********/
 	size_t nr_page = 8;
 	char*p = (char*)new_page(nr_page);//8*4kb,  mm.c
 	pcb->cp->GPRx = (uintptr_t)p;
 	printf("new page:%08x\n", p);
+
+	//vp->pp
+	for(size_t i = 1; i<=nr_page; i++){
+		map(&pcb->as, pcb->as.area.end - i*PGSIZE, p - i*PGSIZE , 0);
+	}
 
 	/*argv和envp参数数组的成员数*/	
 	size_t argc = 0, envc = 0;
