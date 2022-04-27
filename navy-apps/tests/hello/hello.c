@@ -16,7 +16,7 @@ int main(int argc, char* argv[], char* envp[]) {
   return 0;
   */
 
-  	printf("%s %s %s\n", argv[0], argv[1], argv[2]);
+ 	printf("hellow word\n");
 	return 0;
 
 }

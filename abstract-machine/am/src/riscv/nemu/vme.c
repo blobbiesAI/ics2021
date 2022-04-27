@@ -2,6 +2,7 @@
 #include <nemu.h>
 #include <klib.h>
 
+
 static AddrSpace kas = {};   //abstract-machine/am/include/am.h
 static void* (*pgalloc_usr)(int) = NULL;
 static void (*pgfree_usr)(void*) = NULL;
@@ -34,7 +35,6 @@ bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {
   pgfree_usr = pgfree_f;
 
   kas.ptr = pgalloc_f(PGSIZE);//一级页表所在的物理页; ptr是物理页的物理地址
-
   int i;
   for (i = 0; i < LENGTH(segments); i ++) {
     void *va = segments[i].start;
@@ -61,7 +61,7 @@ void unprotect(AddrSpace *as) {
 }
 
 void __am_get_cur_as(Context *c) {
-  c->pdir = (vme_enable ? (void *)get_satp() : NULL);
+	c->pdir = (vme_enable ? (void *)get_satp() : NULL);
 }
 
 void __am_switch(Context *c) {//上下文切换时，也需要切换映射关系,即页表
@@ -69,6 +69,7 @@ void __am_switch(Context *c) {//上下文切换时，也需要切换映射关系
     set_satp(c->pdir);
   }
 }
+
 
 void map(AddrSpace *as, void *va, void *pa, int prot) {//添加一条页表条目（从一级页表到二级页表）
 	PTE va31_22 = (PTE)va >> 22;
@@ -94,8 +95,64 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {//添加一条页表条�
 	return;
 }
 
+/*github  Hilbert-Johnson/ics2021
+union PageTableEntry{
+	struct {
+		uintptr_t V : 1;
+		uintptr_t R : 1;
+	    uintptr_t W : 1;
+	    uintptr_t X : 1;
+		uintptr_t U : 1;
+		uintptr_t G : 1;
+		uintptr_t A : 1;
+		uintptr_t D : 1;
+		uintptr_t RSW : 2;
+		uintptr_t PPN : 22;
+	};
+	uintptr_t val;
+};
+
+union VirtualAddress{
+	struct {
+		uintptr_t offset : 12;
+		uintptr_t page : 10;
+		uintptr_t dir : 10;
+	};
+	uintptr_t val;
+};
+
+union PhysicalAddress{
+	struct {
+		uintptr_t offset : 12;
+		uintptr_t page : 20;
+	};
+	uint32_t val;
+};
+
+
+
+void map(AddrSpace *as, void *va, void *pa, int prot) {
+	union VirtualAddress VA;
+	VA.val = (uintptr_t)va;
+	union PageTableEntry *directory = (union PageTableEntry *)(as->ptr) + VA.dir;
+	if (directory->V == 0){
+		union PhysicalAddress PA0;
+		PA0.val = (uintptr_t)pgalloc_usr(PGSIZE);
+		directory->val = PA0.page << 10;
+		directory->V = 1;
+	}
+	union PageTableEntry *page = (union PageTableEntry *)(directory->PPN << 12) + VA.page;
+	union PhysicalAddress PA;
+	PA.val = (uintptr_t)pa;
+	page->val = PA.page << 10;
+	page->V = 1;
+}
+*/
+
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
 	Context *p = (Context*)(kstack.end - sizeof(Context));
+	memset(p, 0, sizeof(Context));
 	p->mepc = (uintptr_t)entry;
+	p->pdir = as->ptr;
 	return p;
 }

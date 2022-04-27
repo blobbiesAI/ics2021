@@ -10,6 +10,7 @@ void* new_page(size_t nr_page) {
 
 #ifdef HAS_VME
 static void* pg_alloc(int n) {//参数是分配空间的字节数, 申请的空间总是页面大小的整数倍
+	assert(n%4096==0);
 	void* ret = new_page(n/4096);
 	ret -= n;
 	memset(ret, 0, n);

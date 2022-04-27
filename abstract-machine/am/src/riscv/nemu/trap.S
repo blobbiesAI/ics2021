@@ -47,7 +47,7 @@ __am_asm_trap:
   or t1, t1, a0
   csrw mstatus, t1
 
-  mv a0, sp    
+  mv a0, sp    //a0是CPRx
   jal __am_irq_handle
 
   mv sp, a0  #####???????????? 猜测在__am_irq_handle函数中a0值已经改变成新的进程的上下文指针,即schedule函数,这里的sp即是上下文指针

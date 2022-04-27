@@ -24,7 +24,23 @@ def_EHelper(auipc){
 	rtl_addi(s, ddest, &s->pc, id_src1->imm);
 }
 
+
+def_EHelper(jal) {
+  rtl_addi(s, ddest, &s->pc, 4);
+  rtl_addi(s, &s->dnpc, &s->pc, id_src1->imm);
+}
+
+
+def_EHelper(jalr){
+  rtl_addi(s, s0, &s->pc, 4);
+  rtl_addi(s, &s->dnpc, dsrc1, id_src2->imm);
+  rtl_andi(s, &s->dnpc, &s->dnpc, ~1);
+  rtl_addi(s, ddest, s0, 0);
+}
+
 ///////////////////////////////////////////////////
+/*
+
 def_EHelper(jal){
 	rtl_li(s, ddest, 4 + s->pc);
 	rtl_j(s, s->pc + id_src1->imm);
@@ -34,6 +50,7 @@ def_EHelper(jalr){
 	rtl_j(s, *dsrc1 + id_src2->imm);
 	rtl_li(s, ddest, 4 + s->pc);
 }
+*/
 ////////////////////////////////////////////////////////
 /*
 def_EHelper(jal){
@@ -154,7 +171,7 @@ def_EHelper(blt){
 
 
 def_EHelper(bltu){
-	if(*dsrc1 < *dsrc2){
+	if((*dsrc1) < (*dsrc2)){
 		rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
 	}
 }
@@ -168,7 +185,7 @@ def_EHelper(bge){
 }
 
 def_EHelper(bgeu){
-	if(*dsrc1 >= *dsrc2){
+	if((*dsrc1) >= (*dsrc2)){
 		rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
 	}
 }

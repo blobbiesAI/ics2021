@@ -6,7 +6,7 @@
 void naive_uload(PCB *pcb, const char *filename);
 uintptr_t proc_uload(PCB *pcb, const char *filename);
 
-
+//只用于新的进程启动，即人工创建的上下文信息存在PCB内核栈中，运行时的上下文存在用户栈
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
@@ -43,10 +43,9 @@ void context_uload(PCB *pcb, const char* filename, char *const argv[], char *con
 	//
 	protect(&pcb->as);
 
-
 	Area kstack = {.start = pcb->stack, .end = pcb->stack + STACK_SIZE};//每一个pcb里有一个内核栈（即一个数组),栈底放着Context，栈顶放着cp指针.
 	uintptr_t entry = proc_uload(pcb, filename);//加载用户程序,返回进程入口地址
-	pcb->cp = ucontext(NULL, kstack, (void*)entry);//上下文结构指针
+	pcb->cp = ucontext(&pcb->as, kstack, (void*)entry);//上下文结构指针  ??????
 	printf("user process entry:%p, uprocess context:%p, heap_start:%p, heap end:%p\n", entry, pcb->cp, heap.start, heap.end);
 
 
@@ -99,7 +98,7 @@ void context_uload(PCB *pcb, const char* filename, char *const argv[], char *con
 	q--;
 	*q = argc;//argc值
 
-	pcb->cp->GPRx = (uintptr_t)q;
+	pcb->cp->GPRx = (uintptr_t)q;//(uintptr_t)pcb->as.area.end - (pcb->cp->GPRx - (uintptr_t)q);//虚拟地址栈顶
 	printf("after user process init, sp pointer:%p\n", pcb->cp->GPRx);
 	return;
 /*
@@ -160,30 +159,37 @@ void context_uload(PCB *pcb, const char* filename, char *const argv[], char *con
 */
 }
 
+/*
+static size_t ceil_4_bytes(size_t size){
+	  if (size & 0x3)
+		      return (size & (~0x3)) + 0x4;
+			    return size;
+}
+*/
 
-enum{KERNEL_THREAD, PROC_NTERM, PROC_MENU, PROC_BUSYBOX};
+enum{KERNEL_THREAD, PROC_NTERM, PROC_HELLO, PROC_DUMMY};
 
 char *uproc[] = {
 	[KERNEL_THREAD] = NULL,
 	[PROC_NTERM] = "/bin/nterm",
-	[PROC_MENU] = "/bin/menu",
-	[PROC_BUSYBOX] = "/bin/printenv",
+	[PROC_HELLO] = "/bin/hello",
+	[PROC_DUMMY] = "/bin/dummy",
 	//user process
 };
 
 
 char* argv[MAX_NR_PROC][8] = {
 	[PROC_NTERM] = {"/bin/nterm", NULL},
-	[PROC_MENU] = {"/bin/menu", NULL},
-	[PROC_BUSYBOX] = {"/bin/printenv", NULL},
+	[PROC_HELLO] = {"/bin/hello", NULL},
+	[PROC_DUMMY] = {"/bin/dummy", NULL},
 	//user process argv[]
 };
 
 
 char* envp[MAX_NR_PROC][8] = {
 	[PROC_NTERM] = {NULL},
-	[PROC_MENU] = {NULL},
-	[PROC_BUSYBOX] = {NULL},
+	[PROC_HELLO] = {NULL},
+	[PROC_DUMMY] = {NULL},
 	//user process envp[]
 };
 
@@ -191,13 +197,12 @@ char* envp[MAX_NR_PROC][8] = {
 
 
 void init_proc() {
-	//int id = PROC_BUSYBOX;
 	context_kload(&pcb[KERNEL_THREAD], hello_fun, "one");//刚刚加载完的,还未开始运行进程,在进程的栈上人工创建一个上下文结构,
 	//context_kload(&pcb[1], hello_fun, "two");//内核线程：操作系统内部函数？？？？
 
-	context_uload(&pcb[PROC_NTERM], uproc[PROC_NTERM], argv[PROC_NTERM], envp[PROC_NTERM]);
-	//context_uload(&pcb[id], uproc[id], argv[id], envp[id]);
-	//context_uload(&pcb[PROC_EXEC_TEST], uproc[PROC_EXEC_TEST], argv[PROC_EXEC_TEST], envp[PROC_EXEC_TEST]);//
+	context_uload(&pcb[1], uproc[1], argv[1], envp[1]);
+	context_uload(&pcb[2], uproc[2], argv[2], envp[2]);
+	context_uload(&pcb[3], uproc[3], argv[3], envp[3]);
 
 	//--------------program break-----------------//
 	extern char _end;
@@ -208,10 +213,10 @@ void init_proc() {
 
 	switch_boot_pcb();//初始化current指针
 
-	yield();//收到EVENT_YIELD事件后, 调用schedule()并返回新的上下文
+	//yield();//收到EVENT_YIELD事件后, 调用schedule()并返回新的上下文
 
 	Log("Initializing processes...");
-	//naive_uload(NULL,"/bin/exec-test");//jump to entry....// load program here  bird nslider nterm menu
+	//naive_uload(&pcb[0],"/bin/dummy");//jump to entry....// load program here  bird nslider nterm menu
 }
 
 Context* schedule(Context *prev) {//进程调度
@@ -233,7 +238,7 @@ int pexecve(const char* filename, char *const argv[], char *const envp[]){
 	printf("Loading from %s ...\n", filename);
 
 	//A的执行流中创建用户进程B
-	context_uload(&pcb[1], filename, argv, envp);
+	context_uload(&pcb[PROC_DUMMY], filename, argv, envp);
 	//要运行exec-test,只需要current = &pcb[3];和context_uload(&pcb[3], filename, argv, envp);
 	//通过new_page不断构建32KB大小用户栈,那内核栈
 
