@@ -3,8 +3,8 @@ def_EHelper(csrrw){
 		case 0x180: if(ddest != &gpr(0)){*ddest = cpu.satp;}
 					cpu.satp = *dsrc1;
 					break;
-		case 0x300: if(ddest != &gpr(0)){*ddest = cpu.mstatus;}
-					cpu.mstatus = *dsrc1;
+		case 0x300: if(ddest != &gpr(0)){*ddest = cpu.mstatus.value;}
+					cpu.mstatus.value = *dsrc1;
 					break;
 		case 0x305: if(ddest != &gpr(0)){*ddest = cpu.mtvec;}
 					cpu.mtvec = *dsrc1;		
@@ -21,13 +21,13 @@ def_EHelper(csrrw){
 }
 
 
-def_EHelper(csrrs){
+def_EHelper(csrrs){ 
 	 switch(id_src2->imm){
 		case 0x180: *ddest = cpu.satp;
 					if(dsrc1 != &gpr(0)){cpu.satp |= *dsrc1;}
 					break;
-		case 0x300: *ddest = cpu.mstatus;
-					if(dsrc1 != &gpr(0)){cpu.mstatus |= *dsrc1;}
+		case 0x300: *ddest = cpu.mstatus.value;
+					if(dsrc1 != &gpr(0)){cpu.mstatus.value |= *dsrc1;}
 					break;
 		case 0x305: *ddest = cpu.mtvec;
 					if(dsrc1 != &gpr(0)){cpu.mtvec |= *dsrc1;}
@@ -43,8 +43,11 @@ def_EHelper(csrrs){
 		} 
 }
 
+
 def_EHelper(mret){//返回自陷指令的下一条指令
-	s->dnpc = cpu.mepc+4;
+	cpu.mstatus.m.MIE  = cpu.mstatus.m.MPIE;
+	cpu.mstatus.m.MPIE = 1;
+	s->dnpc = cpu.mepc;
 }
 
 

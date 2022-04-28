@@ -15,7 +15,6 @@ static const char *keyname[256] __attribute__((used)) = {
 };
 
 size_t serial_write(const void *buf, size_t offset, size_t len) {
-	yield();
 	char *p = (char*)buf;
 	size_t i = 0;
 	for(; i < len; i++){
@@ -26,7 +25,6 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 }
 
 size_t events_read(void *buf, size_t offset, size_t len) {//函数实现有bug
-	yield();
 	AM_INPUT_KEYBRD_T keyboard = io_read(AM_INPUT_KEYBRD);
 	if(keyboard.keycode == AM_KEY_NONE){return 0;}
 	else{
@@ -48,7 +46,6 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
 }
 
 size_t fb_write(const void *buf, size_t offset, size_t len) {
-	yield();
 	int fb_w = io_read(AM_GPU_CONFIG).width;
 	int fb_h = io_read(AM_GPU_CONFIG).height;
     if(offset+len > fb_w * fb_h*4) len = fb_w * fb_h*4 - offset;

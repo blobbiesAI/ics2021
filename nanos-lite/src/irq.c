@@ -6,13 +6,17 @@ Context* schedule(Context *);
 static Context* do_event(Event e, Context* c) {
   switch (e.event)  {
 	case EVENT_YIELD:   //Log("yield ok!"); 
-						return schedule(c);
+						c = schedule(c);
 						//c->GPR1 = (uintptr_t)schedule(c);
 						//printf("%08x\n", c->GPR1);
 						break;
 	case EVENT_SYSCALL: 
 						//Log("syscall ok!");
 						do_syscall(c);	
+						break;
+	case EVENT_IRQ_TIMER:
+						Log("IRQ timer ok!");
+						c = schedule(c);
 						break;
 	default: panic("Unhandled event ID = %d", e.event);
   }

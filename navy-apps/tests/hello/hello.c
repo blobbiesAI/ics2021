@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 int main(int argc, char* argv[], char* envp[]) {
-/*
+
   write(1, "Hello World!\n", 13);
   int i = 2;
   volatile int j = 0;
@@ -14,9 +14,9 @@ int main(int argc, char* argv[], char* envp[]) {
     }
   }
   return 0;
-  */
+  
 
- 	printf("hellow word\n");
-	return 0;
+ 	//printf("hellow word\n");
+	//return 0;
 
 }

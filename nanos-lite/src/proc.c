@@ -21,9 +21,9 @@ void switch_boot_pcb() {
 void hello_fun(void *arg) {
   int j = 1;
   while (1) {
-	if(j%10000==0){
+	//if(j%10000==0){
 		Log("Hello World from Nanos-lite with arg '%p' for the %dth time!", (uintptr_t)arg, j);
-    }
+    //}
 	j ++;
     yield();
   }
@@ -226,7 +226,7 @@ Context* schedule(Context *prev) {//进程调度
 	//current = &pcb[0];
 	//current = &pcb[2];
 	//free_pcb++;
-	current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+	current = (current == &pcb[2] ? &pcb[1] : &pcb[2]);
 	// then return the new context
 	return current->cp;
 }

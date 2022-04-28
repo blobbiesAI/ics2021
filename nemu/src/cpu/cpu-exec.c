@@ -114,6 +114,11 @@ void cpu_exec(uint64_t n) {
     trace_and_difftest(&s, cpu.pc);//debug
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());//device
+	
+	word_t intr = isa_query_intr();
+	if(intr != INTR_EMPTY){
+		cpu.pc = isa_raise_intr(intr, cpu.pc);//查看是否有硬件中断到来
+	} 
   }
 
   uint64_t timer_end = get_time();

@@ -149,10 +149,12 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 }
 */
 
+#define MPIE 0x80
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
 	Context *p = (Context*)(kstack.end - sizeof(Context));
 	memset(p, 0, sizeof(Context));
 	p->mepc = (uintptr_t)entry;
+	p->mstatus = MPIE;
 	p->pdir = as->ptr;
 	return p;
 }

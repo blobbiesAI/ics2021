@@ -4,17 +4,46 @@
 #include <common.h>
 #include <isa.h>
 typedef struct {
-  struct {
+  struct { 
     rtlreg_t _32;
-  } gpr[32];
+  } gpr[32];  
 
   rtlreg_t mepc;
   rtlreg_t mcause;
   rtlreg_t mtvec;
-  rtlreg_t mstatus;
+ 
+  union {
+	struct{
+		uint32_t UIE    : 1;
+		uint32_t SIE    : 1;
+		uint32_t WPRI_0 : 1;
+		uint32_t MIE    : 1;
+		uint32_t UPIE   : 1;
+		uint32_t SPIE   : 1;
+		uint32_t WPRI   : 1;
+		uint32_t MPIE   : 1;
+		uint32_t SPP    : 1;
+		uint32_t WPRI_1_2 : 2;
+		uint32_t MPP    : 2;
+		uint32_t FS     : 2;
+		uint32_t XS     : 2;
+		uint32_t MPRV   : 1;					
+		uint32_t SUM    : 1;			
+		uint32_t MXR    : 1;											
+		uint32_t TVM    : 1;
+		uint32_t TW     : 1;
+		uint32_t TSR    : 1;
+		uint32_t WPRI_3_10 : 8;
+		uint32_t SD     : 1;
+	} m;
+	rtlreg_t value;
+  } mstatus;
+
   rtlreg_t satp;
   vaddr_t pc;
-} riscv32_CPU_state;
+
+  bool INTR;//中断引脚
+} riscv32_CPU_state;//模拟cpu硬件，包括寄存器和引脚
 
 // decode
 typedef struct {
